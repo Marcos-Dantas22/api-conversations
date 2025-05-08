@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from .models import Conversation, Message
 from .serializers import WebhookEventSerializer, ConversationSerializer
 from django.utils.dateparse import parse_datetime
@@ -71,5 +71,16 @@ class ConversationDetailView(APIView):
     def get(self, request, id):
         conversation = get_object_or_404(Conversation, id=id)
         serializer = ConversationSerializer(conversation)
-        print(serializer.data)
         return Response(serializer.data)
+
+def conversation_list_view(request):
+    conversations = Conversation.objects.all().order_by('-created_at')
+    return render(request, 'api/conversation_list.html', {'conversations': conversations})
+
+def conversation_detail_view(request, id):
+    conversation = get_object_or_404(Conversation, id=id)
+    messages = Message.objects.filter(conversation=conversation).order_by('created_at')
+    return render(request, 'api/conversation_detail.html', {
+        'conversation': conversation,
+        'messages': messages
+    })
