@@ -6,8 +6,17 @@ from .models import Conversation, Message
 from .serializers import WebhookEventSerializer, ConversationSerializer
 from django.utils.dateparse import parse_datetime
 from .utils import StateConversationStatus, StateMessageStatus
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
 class WebhookView(APIView):
+    @extend_schema(
+        summary="Recebe eventos do webhook",
+        description="Processa eventos de criação de conversa, nova mensagem ou encerramento de conversa.",
+        request=WebhookEventSerializer,
+        responses={200: OpenApiExample(
+            'Sucesso', value={"detail": "Evento processado com sucesso."}
+        )}
+    )
     def post(self, request):
         serializer = WebhookEventSerializer(data=request.data)
         if not serializer.is_valid():
@@ -68,16 +77,32 @@ class WebhookView(APIView):
         return Response({"detail": "Evento processado com sucesso."}, status=status.HTTP_200_OK)
 
 class ConversationDetailView(APIView):
+    @extend_schema(
+        summary="Detalhes de uma conversa",
+        description="Retorna todas as informações da conversa com o ID fornecido, incluindo mensagens.",
+        parameters=[
+            OpenApiParameter(name='id', type=str, location=OpenApiParameter.PATH, required=True, description='ID da conversa')
+        ],
+        responses={200: ConversationSerializer}
+    )
     def get(self, request, id):
         conversation = get_object_or_404(Conversation, id=id)
         serializer = ConversationSerializer(conversation)
         return Response(serializer.data)
 
 def conversation_list_view(request):
+    """
+        View HTML: Lista todas as conversas existentes, ordenadas da mais recente para a mais antiga.
+        Rota usada para frontend visual com Django Templates.
+    """
     conversations = Conversation.objects.all().order_by('-created_at')
     return render(request, 'api/conversation_list.html', {'conversations': conversations})
 
 def conversation_detail_view(request, id):
+    """
+        View HTML: Mostra os detalhes de uma conversa específica (mensagens incluídas).
+        Ideal para navegação e visualização de histórico de mensagens no frontend.
+    """
     conversation = get_object_or_404(Conversation, id=id)
     messages = Message.objects.filter(conversation=conversation).order_by('created_at')
     return render(request, 'api/conversation_detail.html', {

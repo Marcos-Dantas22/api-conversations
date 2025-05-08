@@ -37,8 +37,33 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_spectacular',
     'api',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API Conversas',
+    'DESCRIPTION': 'API responsável por gerenciar conversas e mensagens recebidas via webhook.',
+    'VERSION': '1.0.0',
+
+    'CONTACT': {
+        'name': 'Marcos Vinicius',
+        'email': 'marcosdantaslkdin@gmail.com',
+    },
+
+    'SERVERS': [
+        {"url": "http://localhost:8000", "description": "Localhost Dev"},
+        {"url": "https://api.seuprojeto.com", "description": "Produção"},
+    ],
+
+    'SCHEMA_PATH_PREFIX': '/api',  # se todas suas APIs estão sob /api/
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
