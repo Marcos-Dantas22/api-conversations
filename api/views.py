@@ -2,20 +2,113 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404, render
-from .models import Conversation, Message
-from .serializers import WebhookEventSerializer, ConversationSerializer
-from django.utils.dateparse import parse_datetime
-from .utils import StateConversationStatus, StateMessageStatus
+from .models import Conversation, Message, FailedWebhookEvent
+from .serializers import WebhookEventSerializer, ConversationSerializer, SuccessResponseSerializer, ErrorResponseSerializer
+from .utils import StateConversationStatus
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import OpenApiResponse
+from realmate_challenge.authentication import ApiKeyAuthenticationPersonal
+
 
 class WebhookView(APIView):
+    authentication_classes = [ApiKeyAuthenticationPersonal]
+
     @extend_schema(
         summary="Recebe eventos do webhook",
         description="Processa eventos de criação de conversa, nova mensagem ou encerramento de conversa.",
         request=WebhookEventSerializer,
-        responses={200: OpenApiExample(
-            'Sucesso', value={"detail": "Evento processado com sucesso."}
-        )}
+        examples=[
+            OpenApiExample(
+                name="Nova Conversa",
+                summary="Evento de nova conversa",
+                value={
+                    "type": "NEW_CONVERSATION",
+                    "timestamp": "2025-05-09T18:30:00Z",
+                    "data": {
+                        "conversation_id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
+                    }
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name="Nova Mensagem",
+                summary="Evento de nova mensagem",
+                value={
+                    "type": "NEW_MESSAGE",
+                    "timestamp": "2025-05-09T18:30:00Z",
+                    "data": {
+                        "id": "49108c71-4dca-4af3-9f32-61bc745926e2",
+                        "direction": "RECEIVED",
+                        "content": "Olá, tudo bem?",
+                        "conversation_id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
+                    }
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name="Encerrar Conversa",
+                summary="Evento de encerramento de conversa",
+                value={
+                    "type": "CLOSE_CONVERSATION",
+                    "timestamp": "2025-05-09T18:30:00Z",
+                    "data": {
+                        "id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
+                    }
+                },
+                request_only=True
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=SuccessResponseSerializer,
+                description="Evento processado com sucesso.",
+                examples=[
+                    OpenApiExample(
+                        name="Sucesso",
+                        value={"detail": "Evento processado com sucesso."},
+                        response_only=True
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=ErrorResponseSerializer,
+                description="Erro de Validação",
+                examples=[
+                    OpenApiExample(
+                        name="Mensagem duplicada",
+                        value={"error": "Mensagem com esse ID já existe."},
+                        response_only=True
+                    ),
+                    OpenApiExample(
+                        name="Campos obrigatórios ausentes",
+                        value={"error": "Message ID, conversation ID, content, e direction são obrigatorios."},
+                        response_only=True
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                response=SuccessResponseSerializer,  # ou outro se quiser
+                description="Chave de API ausente ou inválida.",
+                examples=[
+                    OpenApiExample(
+                        name="Credenciais inválidas.",
+                        value={"detail": "Credenciais inválidas"},
+                        response_only=True
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                response=ErrorResponseSerializer,
+                description="Erro Interno",
+                examples=[
+                    OpenApiExample(
+                        name="Erro inesperado",
+                        value={"error": "Erro ao processar evento. Será reprocessado."},
+                        response_only=True
+                    )
+                ]
+            ),
+        }
     )
     def post(self, request):
         serializer = WebhookEventSerializer(data=request.data)
@@ -26,83 +119,138 @@ class WebhookView(APIView):
         data = serializer.validated_data["data"]
         timestamp = serializer.validated_data["timestamp"]
 
-        if event_type == "NEW_CONVERSATION":
-            # Verificar se o ID da conversa já existe
-            if "id" not in data:
-                return Response({"error": "Conversation ID e obrigatorio."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if event_type == "NEW_CONVERSATION":
+                if "id" not in data:
+                    return Response({"error": "Conversation ID é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
 
-            if Conversation.objects.filter(id=data["id"]).exists():
-                return Response({"error": f"Conversation ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
+                if Conversation.objects.filter(id=data["id"]).exists():
+                    return Response({"error": f"Conversation ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
 
-            Conversation.objects.create(
-                id=data["id"], state=StateConversationStatus.OPEN, created_at=timestamp
+                Conversation.objects.create(
+                    id=data["id"], state=StateConversationStatus.OPEN, created_at=timestamp
+                )
+            
+            elif event_type == "NEW_MESSAGE":
+                if not all(key in data for key in ["id", "conversation_id", "content", "direction"]):
+                    return Response({"error": "Message ID, conversation ID, content e direction são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)
+
+                if Message.objects.filter(id=data["id"]).exists():
+                    return Response({"error": f"Message com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
+
+                conversation = get_object_or_404(Conversation, id=data["conversation_id"])
+
+                if not data["content"].strip():
+                    return Response({"error": "Message content não pode ser vazio."}, status=status.HTTP_400_BAD_REQUEST)
+
+                if not data["id"].strip():
+                    return Response({"error": "Message ID não pode ser vazio."}, status=status.HTTP_400_BAD_REQUEST)
+
+                Message.objects.create(
+                    id=data["id"],
+                    state=data["direction"],
+                    content=data["content"],
+                    created_at=timestamp,
+                    conversation=conversation,
+                )
+            
+            elif event_type == "CLOSE_CONVERSATION":
+                if "id" not in data:
+                    return Response({"error": "Conversation ID é obrigatório para fechar a conversa."}, status=status.HTTP_400_BAD_REQUEST)
+
+                conversation = get_object_or_404(Conversation, id=data["id"])
+                conversation.state = StateConversationStatus.CLOSED
+                conversation.finish_at = timestamp
+                conversation.save()
+
+        except Exception as e:
+            FailedWebhookEvent.objects.create(
+                type=event_type,
+                data=data,
+                timestamp=timestamp,
+                error_message=str(e),
             )
-        
-        elif event_type == "NEW_MESSAGE":
-            # Verificar se todos os campos necessários estão presentes
-            if not all(key in data for key in ["id", "conversation_id", "content", "direction"]):
-                return Response({"error": "Message ID, conversation ID, content, e direction são obrigatorios."}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Verificar se o ID da mensagem já existe
-            if Message.objects.filter(id=data["id"]).exists():
-                return Response({"error": f"Message com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
-
-            conversation = get_object_or_404(Conversation, id=data["conversation_id"])
-
-            # Verificar se o conteúdo da mensagem não está vazio
-            if not data["content"].strip():
-                return Response({"error": "Message content não pode ser vazia."}, status=status.HTTP_400_BAD_REQUEST)
-
-            if not data["id"].strip():
-                return Response({"error": "Message ID não pode ser vazia."}, status=status.HTTP_400_BAD_REQUEST)
-
-            Message.objects.create(
-                id=data["id"],
-                state=data["direction"],
-                content=data["content"],
-                created_at=timestamp,
-                conversation=conversation,
-            )
-        
-        elif event_type == "CLOSE_CONVERSATION":
-            # Verificar se o ID da conversa para fechar foi fornecido
-            if "id" not in data:
-                return Response({"error": "Conversation ID e obrigatorio para fechar a conversa."}, status=status.HTTP_400_BAD_REQUEST)
-
-            conversation = get_object_or_404(Conversation, id=data["id"])
-            conversation.state = StateConversationStatus.CLOSED
-            conversation.finish_at = timestamp
-            conversation.save()
+            return Response({"error": "Erro ao processar evento. Será reprocessado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"detail": "Evento processado com sucesso."}, status=status.HTTP_200_OK)
 
 class ConversationDetailView(APIView):
+    authentication_classes = [ApiKeyAuthenticationPersonal]
+
     @extend_schema(
         summary="Detalhes de uma conversa",
         description="Retorna todas as informações da conversa com o ID fornecido, incluindo mensagens.",
-        parameters=[
-            OpenApiParameter(name='id', type=str, location=OpenApiParameter.PATH, required=True, description='ID da conversa')
+        parameters=[ 
+            OpenApiParameter(
+                name='id',
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True,
+                description='ID da conversa (UUID).'
+            )
         ],
-        responses={200: ConversationSerializer}
+        responses={
+            200: OpenApiResponse(
+                response=ConversationSerializer,
+                description="Detalhes da conversa retornados com sucesso.",
+                examples=[
+                    OpenApiExample(
+                        name="Exemplo de conversa com mensagens",
+                        value={
+                            "id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
+                            "state": "OPEN",
+                            "created_at": "2025-05-09T18:30:00Z",
+                            "finish_at": None,
+                            "messages": [
+                                {
+                                    "id": "49108c71-4dca-4af3-9f32-61bc745926e2",
+                                    "state": "RECEIVED",
+                                    "content": "Olá, tudo bem?",
+                                    "created_at": "2025-05-09T18:31:00Z"
+                                }
+                            ]
+                        },
+                        response_only=True
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=ErrorResponseSerializer,
+                description="ID inválido ou erro de validação.",
+                examples=[
+                    OpenApiExample(
+                        name="ID inválido",
+                        value={"error": "ID inválido ou não encontrado."},
+                        response_only=True
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                response=ErrorResponseSerializer,
+                description="Chave de API ausente ou inválida.",
+                examples=[
+                    OpenApiExample(
+                        name="Credenciais inválidas",
+                        value={"detail": "Credenciais inválidas"},
+                        response_only=True
+                    )
+                ]
+            )
+        }
     )
     def get(self, request, id):
-        conversation = get_object_or_404(Conversation, id=id)
+        conversation = Conversation.objects.filter(id=id).first()
+        if not conversation:
+            return Response({"error": "ID inválido ou não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = ConversationSerializer(conversation)
         return Response(serializer.data)
 
 def conversation_list_view(request):
-    """
-        View HTML: Lista todas as conversas existentes, ordenadas da mais recente para a mais antiga.
-        Rota usada para frontend visual com Django Templates.
-    """
     conversations = Conversation.objects.all().order_by('-created_at')
     return render(request, 'api/conversation_list.html', {'conversations': conversations})
 
 def conversation_detail_view(request, id):
-    """
-        View HTML: Mostra os detalhes de uma conversa específica (mensagens incluídas).
-        Ideal para navegação e visualização de histórico de mensagens no frontend.
-    """
     conversation = get_object_or_404(Conversation, id=id)
     messages = Message.objects.filter(conversation=conversation).order_by('created_at')
     return render(request, 'api/conversation_detail.html', {

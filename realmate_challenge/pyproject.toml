@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 djangorestframework = "^3.14"
+python-decouple = "^3.8"
+sentry-sdk = {extras = ["django"], version = "^2.27.0"}
 drf-spectacular = "^0.28.0"
 
 

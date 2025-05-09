@@ -63,6 +63,22 @@ SPECTACULAR_SETTINGS = {
 
     'SCHEMA_PATH_PREFIX': '/api',  # se todas suas APIs estão sob /api/
     'SERVE_INCLUDE_SCHEMA': False,
+     'SECURITY': [
+        {
+            'ApiKeyAuth': []  # Referencia a chave de autenticação definida abaixo
+        }
+    ],
+    'SECURITY_DEFINITIONS': {
+        'ApiKeyAuth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',  # Nome do campo onde a chave será passada
+            'description': 'Autenticação via Bearer Token'
+        }
+    },
+    'EXTENSIONS': [
+        'realmate_challenge.authentication.ApiKeyAuthenticationPersonalExtension',  # Adicione a extensão aqui
+    ],
 }
 
 MIDDLEWARE = [
@@ -147,3 +163,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+from decouple import config
+
+API_KEY = config('API_KEY')
+
+## sentry for monitoring
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://2679cd8aba784ece8ee276290cdb1654@o4509192557494272.ingest.us.sentry.io/4509290219503616",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)

@@ -76,3 +76,21 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Mensagem {self.id}"
+    
+
+class FailedWebhookEvent(models.Model):
+    type = models.CharField(max_length=50)
+    data = models.JSONField()
+    timestamp = models.DateTimeField()
+    error_message = models.TextField()
+    retry_count = models.IntegerField(default=0)
+    last_retry_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Evento do Webhook com Falha"
+        verbose_name_plural = "Eventos do Webhook com Falha"
+
+    def __str__(self):
+        return f"Event {self.id}"
+    
