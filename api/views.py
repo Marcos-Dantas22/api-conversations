@@ -8,7 +8,9 @@ from .utils import StateConversationStatus
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from drf_spectacular.utils import OpenApiResponse
 from realmate_challenge.authentication import ApiKeyAuthenticationPersonal
-
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 
 class WebhookView(APIView):
     authentication_classes = [ApiKeyAuthenticationPersonal]
@@ -25,7 +27,7 @@ class WebhookView(APIView):
                     "type": "NEW_CONVERSATION",
                     "timestamp": "2025-05-09T18:30:00Z",
                     "data": {
-                        "conversation_id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
+                        "id": "6a41b347-8d80-4ce9-84ba-7af66f369f6a",
                     }
                 },
                 request_only=True
@@ -81,7 +83,12 @@ class WebhookView(APIView):
                     ),
                     OpenApiExample(
                         name="Campos obrigatórios ausentes",
-                        value={"error": "Message ID, conversation ID, content, e direction são obrigatorios."},
+                        value={"error": "id, conversation_id , content, e direction são obrigatorios."},
+                        response_only=True
+                    ),
+                    OpenApiExample(
+                        name="Conversa já fechada",
+                        value={"error": "Conversa fechada, não é possivel processar novas mensagens."},
                         response_only=True
                     )
                 ]
@@ -122,10 +129,10 @@ class WebhookView(APIView):
         try:
             if event_type == "NEW_CONVERSATION":
                 if "id" not in data:
-                    return Response({"error": "Conversation ID é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "id é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
 
                 if Conversation.objects.filter(id=data["id"]).exists():
-                    return Response({"error": f"Conversation ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": f"Conversa com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
 
                 Conversation.objects.create(
                     id=data["id"], state=StateConversationStatus.OPEN, created_at=timestamp
@@ -136,7 +143,7 @@ class WebhookView(APIView):
                     return Response({"error": "Message ID, conversation ID, content e direction são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)
 
                 if Message.objects.filter(id=data["id"]).exists():
-                    return Response({"error": f"Message com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": f"Mensagem com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
 
                 conversation = get_object_or_404(Conversation, id=data["conversation_id"])
 
@@ -145,6 +152,9 @@ class WebhookView(APIView):
 
                 if not data["id"].strip():
                     return Response({"error": "Message ID não pode ser vazio."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                if conversation.state == StateConversationStatus.CLOSED:
+                    return Response({"error": "Conversa fechada, não é possivel processar novas mensagens."}, status=status.HTTP_400_BAD_REQUEST)
 
                 Message.objects.create(
                     id=data["id"],
@@ -156,7 +166,7 @@ class WebhookView(APIView):
             
             elif event_type == "CLOSE_CONVERSATION":
                 if "id" not in data:
-                    return Response({"error": "Conversation ID é obrigatório para fechar a conversa."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "id é obrigatório para fechar a conversa."}, status=status.HTTP_400_BAD_REQUEST)
 
                 conversation = get_object_or_404(Conversation, id=data["id"])
                 conversation.state = StateConversationStatus.CLOSED
@@ -248,8 +258,24 @@ class ConversationDetailView(APIView):
 
 def conversation_list_view(request):
     conversations = Conversation.objects.all().order_by('-created_at')
-    return render(request, 'api/conversation_list.html', {'conversations': conversations})
+    paginator = Paginator(conversations, 10)  # 10 por página
 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'api/conversation_list.html', {
+        'page_obj': page_obj
+    })
+
+@require_http_methods(["DELETE"])
+def delete_conversation(request, id):
+    try:
+        conv = Conversation.objects.get(id=id)
+        conv.delete()
+        return JsonResponse({'message': 'Conversa apagada com sucesso.'})
+    except Conversation.DoesNotExist:
+        return JsonResponse({'message': 'Conversa não encontrada.'}, status=404)
+    
 def conversation_detail_view(request, id):
     conversation = get_object_or_404(Conversation, id=id)
     messages = Message.objects.filter(conversation=conversation).order_by('created_at')
