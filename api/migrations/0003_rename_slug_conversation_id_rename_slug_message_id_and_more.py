@@ -10,24 +10,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='conversation',
-            old_name='slug',
-            new_name='id',
-        ),
-        migrations.RenameField(
-            model_name='message',
-            old_name='slug',
-            new_name='id',
-        ),
-        migrations.AlterField(
-            model_name='conversation',
-            name='created_at',
-            field=models.DateTimeField(help_text='data de criação', verbose_name='criado em'),
-        ),
-        migrations.AlterField(
-            model_name='message',
-            name='created_at',
-            field=models.DateTimeField(help_text='data de criação', verbose_name='criado em'),
-        ),
+        # migrations.RenameField(
+        #     model_name='conversation',
+        #     old_name='slug',
+        #     new_name='id',
+        # ),
+        # migrations.RenameField(
+        #     model_name='message',
+        #     old_name='slug',
+        #     new_name='id',
+        # ),
+        # migrations.AlterField(
+        #     model_name='conversation',
+        #     name='created_at',
+        #     field=models.DateTimeField(help_text='data de criação', verbose_name='criado em'),
+        # ),
+        # migrations.AlterField(
+        #     model_name='message',
+        #     name='created_at',
+        #     field=models.DateTimeField(help_text='data de criação', verbose_name='criado em'),
+        # ),
     ]

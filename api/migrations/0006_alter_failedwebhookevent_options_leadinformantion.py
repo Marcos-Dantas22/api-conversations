@@ -11,24 +11,24 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='failedwebhookevent',
-            options={'verbose_name': 'Evento do Webhook com Falha', 'verbose_name_plural': 'Eventos do Webhook com Falha'},
-        ),
-        migrations.CreateModel(
-            name='LeadInformantion',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type_property', models.CharField(blank=True, max_length=100, null=True)),
-                ('neighborhood', models.CharField(blank=True, max_length=100, null=True)),
-                ('price_track', models.CharField(blank=True, max_length=100, null=True)),
-                ('rooms', models.IntegerField(blank=True, null=True)),
-                ('urgency', models.CharField(blank=True, max_length=50, null=True)),
-                ('conversation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='lead_info', to='api.conversation')),
-            ],
-            options={
-                'verbose_name': 'Informações de imovel',
-                'verbose_name_plural': 'Informações de imoveis',
-            },
-        ),
+        # migrations.AlterModelOptions(
+        #     name='failedwebhookevent',
+        #     options={'verbose_name': 'Evento do Webhook com Falha', 'verbose_name_plural': 'Eventos do Webhook com Falha'},
+        # ),
+        # migrations.CreateModel(
+        #     name='LeadInformantion',
+        #     fields=[
+        #         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+        #         ('type_property', models.CharField(blank=True, max_length=100, null=True)),
+        #         ('neighborhood', models.CharField(blank=True, max_length=100, null=True)),
+        #         ('price_track', models.CharField(blank=True, max_length=100, null=True)),
+        #         ('rooms', models.IntegerField(blank=True, null=True)),
+        #         ('urgency', models.CharField(blank=True, max_length=50, null=True)),
+        #         ('conversation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='lead_info', to='api.conversation')),
+        #     ],
+        #     options={
+        #         'verbose_name': 'Informações de imovel',
+        #         'verbose_name_plural': 'Informações de imoveis',
+        #     },
+        # ),
     ]

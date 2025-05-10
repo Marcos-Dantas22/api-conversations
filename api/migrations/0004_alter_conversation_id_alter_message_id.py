@@ -11,14 +11,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='conversation',
-            name='id',
-            field=models.SlugField(default=uuid.uuid4, max_length=150, primary_key=True, serialize=False, unique=True, verbose_name='Id'),
-        ),
-        migrations.AlterField(
-            model_name='message',
-            name='id',
-            field=models.SlugField(default=uuid.uuid4, max_length=150, primary_key=True, serialize=False, unique=True, verbose_name='Id'),
-        ),
+        # migrations.AlterField(
+        #     model_name='conversation',
+        #     name='id',
+        #     field=models.SlugField(default=uuid.uuid4, max_length=150, primary_key=True, serialize=False, unique=True, verbose_name='Id'),
+        # ),
+        # migrations.AlterField(
+        #     model_name='message',
+        #     name='id',
+        #     field=models.SlugField(default=uuid.uuid4, max_length=150, primary_key=True, serialize=False, unique=True, verbose_name='Id'),
+        # ),
     ]

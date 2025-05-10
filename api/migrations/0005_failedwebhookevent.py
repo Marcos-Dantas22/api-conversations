@@ -10,17 +10,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='FailedWebhookEvent',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(max_length=50)),
-                ('data', models.JSONField()),
-                ('timestamp', models.DateTimeField()),
-                ('error_message', models.TextField()),
-                ('retry_count', models.IntegerField(default=0)),
-                ('last_retry_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-            ],
-        ),
+        # migrations.CreateModel(
+        #     name='FailedWebhookEvent',
+        #     fields=[
+        #         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+        #         ('type', models.CharField(max_length=50)),
+        #         ('data', models.JSONField()),
+        #         ('timestamp', models.DateTimeField()),
+        #         ('error_message', models.TextField()),
+        #         ('retry_count', models.IntegerField(default=0)),
+        #         ('last_retry_at', models.DateTimeField(blank=True, null=True)),
+        #         ('created_at', models.DateTimeField(auto_now_add=True)),
+        #     ],
+        # ),
     ]
