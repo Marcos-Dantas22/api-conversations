@@ -96,13 +96,13 @@ class FailedWebhookEvent(models.Model):
         return f"Event {self.id}"
 
 class LeadInformantion(models.Model):
-    conversation = models.ForeignKey(
+    conversation_id = models.ForeignKey(
         Conversation,
-        verbose_name="Conversa",
+        verbose_name="Conversation",
         on_delete=models.CASCADE,
         related_name='lead_info',
-        default=None
     )
+   
     type_property = models.CharField(max_length=100, null=True, blank=True)
     neighborhood = models.CharField(max_length=100, null=True, blank=True)
     price_track = models.CharField(max_length=100, null=True, blank=True)

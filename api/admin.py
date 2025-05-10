@@ -16,10 +16,10 @@ class FailedWebhookEventAdmin(admin.ModelAdmin):
     search_fields = ('id', 'error_message')
 
 class LeadInformantionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'conversation', 'type_property', 'neighborhood', 'price_track', 'rooms', 'urgency')
+    list_display = ('id', 'conversation_id', 'type_property', 'neighborhood', 'price_track', 'rooms', 'urgency')
     search_fields = ('type_property', 'neighborhood', 'price_track', 'urgency')
     list_filter = ('type_property', 'urgency', 'neighborhood')
-    autocomplete_fields = ('conversation',)
+    autocomplete_fields = ('conversation_id',)
 
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Message, MessageAdmin)
