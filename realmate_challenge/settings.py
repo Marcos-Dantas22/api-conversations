@@ -198,11 +198,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ## sentry for monitoring
-# import sentry_sdk
+import sentry_sdk
 
-# sentry_sdk.init(
-#     dsn="https://2679cd8aba784ece8ee276290cdb1654@o4509192557494272.ingest.us.sentry.io/4509290219503616",
-#     # Add data like request headers and IP for users,
-#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-#     send_default_pii=True,
-# )
+sentry_sdk.init(
+    dsn="https://2679cd8aba784ece8ee276290cdb1654@o4509192557494272.ingest.us.sentry.io/4509290219503616",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
