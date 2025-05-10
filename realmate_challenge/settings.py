@@ -25,8 +25,8 @@ SECRET_KEY = config("SECRET_KEY", 'fallback-in-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = config('DEBUG', True)
-API_KEY = config('API_KEY')
+DEBUG = config('DEBUG', False)
+API_KEY = config('API_KEY') 
 GEMINI_API_KEY = config("GEMINI_API_KEY")
 
 ALLOWED_HOSTS = ['.onrender.com']
@@ -44,11 +44,17 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'api',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+CORS_ALLOWED_ORIGINS = [
+    "https://apis.google.com",
+    "https://www.googleapis.com",
+    "https://cloud.google.com",  # Caso esteja usando outros serviços do Google Cloud
+]
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API Conversas',
@@ -86,6 +92,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
