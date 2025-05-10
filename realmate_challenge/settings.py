@@ -68,7 +68,7 @@ SPECTACULAR_SETTINGS = {
 
     'SERVERS': [
         {"url": "http://localhost:8000", "description": "Localhost Dev"},
-        {"url": "https://api.seuprojeto.com", "description": "Produção"},
+        {"url": "https://api-conversations.onrender.com/", "description": "Produção"},
     ],
 
     'SCHEMA_PATH_PREFIX': '/api',  # se todas suas APIs estão sob /api/
