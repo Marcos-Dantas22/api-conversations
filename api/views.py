@@ -160,11 +160,11 @@ class WebhookView(APIView):
                 if conversation.state == StateConversationStatus.CLOSED:
                     return Response({"error": "Conversa fechada, não é possivel processar novas mensagens."}, status=status.HTTP_400_BAD_REQUEST)
 
-                if data['direction'] == "RECEIVED" and not settings.DEBUG:
+                if data['direction'] == "RECEIVED" and settings.DEBUG == False:
                     infos = extrair_lead_info(data["content"])
                     if infos:
                         LeadInformantion.objects.create(
-                            conversation=conversation,
+                            conversation_id=conversation,
                             type_property=infos.get("type_property"),
                             neighborhood=infos.get("neighborhood"),
                             price_track=infos.get("price_track"),
