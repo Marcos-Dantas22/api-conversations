@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('price_track', models.CharField(blank=True, max_length=100, null=True)),
                 ('rooms', models.IntegerField(blank=True, null=True)),
                 ('urgency', models.CharField(blank=True, max_length=50, null=True)),
-                ('conversation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='lead_info', to='api.conversation')),
+                ('conversation', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='api.conversation', related_name='lead_info')),
             ],
             options={
                 'verbose_name': 'Informações de imovel',
