@@ -22,9 +22,9 @@ class Conversation(models.Model):
         blank=True,
     )
 
-    id = models.SlugField(
+    slug = models.SlugField(
         primary_key=True,
-        verbose_name="Id",
+        verbose_name="Slug",
         max_length=150,
         unique=True,
         default=uuid.uuid4
@@ -44,6 +44,7 @@ class Message(models.Model):
         Conversation,
         verbose_name="Conversa",
         on_delete=models.CASCADE,
+        to_field='slug',
         default=None
     )
     content = models.CharField(
@@ -63,9 +64,9 @@ class Message(models.Model):
         help_text="data de criação",
     )
 
-    id = models.SlugField(
+    slug = models.SlugField(
         primary_key=True,
-        verbose_name="Id",
+        verbose_name="Slug",
         max_length=150,
         unique=True,
         default=uuid.uuid4
@@ -96,11 +97,12 @@ class FailedWebhookEvent(models.Model):
         return f"Event {self.id}"
 
 class LeadInformantion(models.Model):
-    conversation_id = models.ForeignKey(
+    conversation_slug = models.ForeignKey(
         Conversation,
-        verbose_name="Conversation",
         on_delete=models.CASCADE,
+        to_field='slug',
         related_name='lead_info',
+        default=None,
     )
    
     type_property = models.CharField(max_length=100, null=True, blank=True)

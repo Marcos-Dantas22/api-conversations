@@ -2,24 +2,24 @@ from django.contrib import admin
 from .models import Conversation, Message, FailedWebhookEvent, LeadInformantion
 
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'state', 'created_at', 'finish_at')
+    list_display = ('slug', 'state', 'created_at', 'finish_at')
     list_filter = ('state', 'created_at')
-    search_fields = ('id', 'state')
+    search_fields = ('slug', 'state')
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'conversation', 'state', 'content', 'created_at')
+    list_display = ('slug', 'conversation', 'state', 'content', 'created_at')
     list_filter = ('state', 'created_at', 'conversation')
-    search_fields = ('content', 'conversation__id', 'state')
+    search_fields = ('content', 'conversation__slug', 'state')
 
 class FailedWebhookEventAdmin(admin.ModelAdmin):
     list_display = ('id', 'type', 'data', 'timestamp', 'error_message','retry_count', 'last_retry_at','created_at')
     search_fields = ('id', 'error_message')
 
 class LeadInformantionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'conversation_id', 'type_property', 'neighborhood', 'price_track', 'rooms', 'urgency')
+    list_display = ('id', 'conversation_slug', 'type_property', 'neighborhood', 'price_track', 'rooms', 'urgency')
     search_fields = ('type_property', 'neighborhood', 'price_track', 'urgency')
     list_filter = ('type_property', 'urgency', 'neighborhood')
-    autocomplete_fields = ('conversation_id',)
+    autocomplete_fields = ('conversation_slug',)
 
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Message, MessageAdmin)
