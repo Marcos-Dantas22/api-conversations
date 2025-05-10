@@ -4,6 +4,9 @@ from django.conf import settings
 
 class ApiKeyAuthenticationPersonal(BaseAuthentication):
     def authenticate(self, request):
+        if settings.DEBUG:
+            return None  
+        
         # Pega o valor da chave do cabeçalho 'Authorization'
         api_key = request.headers.get('Authorization')
         

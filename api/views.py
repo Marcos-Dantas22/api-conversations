@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from .geminy import extrair_lead_info
+from django.conf import settings
 
 class WebhookView(APIView):
     authentication_classes = [ApiKeyAuthenticationPersonal]
@@ -146,7 +147,9 @@ class WebhookView(APIView):
                 if Message.objects.filter(id=data["id"]).exists():
                     return Response({"error": f"Mensagem com essa ID {data['id']} já existe."}, status=status.HTTP_400_BAD_REQUEST)
 
-                conversation = get_object_or_404(Conversation, id=data["conversation_id"])
+                conversation = Conversation.objects.filter(id=data["conversation_id"]).first()
+                if not conversation:
+                    return Response({"error": f"Conversa com essa ID {data['id']} não existe."}, status=status.HTTP_400_BAD_REQUEST)
 
                 if not data["content"].strip():
                     return Response({"error": "Message content não pode ser vazio."}, status=status.HTTP_400_BAD_REQUEST)
@@ -157,7 +160,7 @@ class WebhookView(APIView):
                 if conversation.state == StateConversationStatus.CLOSED:
                     return Response({"error": "Conversa fechada, não é possivel processar novas mensagens."}, status=status.HTTP_400_BAD_REQUEST)
 
-                if data['direction'] == "RECEIVED":
+                if data['direction'] == "RECEIVED" and not settings.DEBUG:
                     infos = extrair_lead_info(data["content"])
                     if infos:
                         LeadInformantion.objects.create(

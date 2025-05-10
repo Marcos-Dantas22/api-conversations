@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: realmate-challenge
+    env: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: cd realmate_challenge && poetry run gunicorn realmate_challenge.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: realmate-db
+          property: connectionString

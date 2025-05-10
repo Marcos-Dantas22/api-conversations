@@ -20,12 +20,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)#$b+zh12er&2m55k2l5=ko-y@b5p21_a%r19+=ru*_e=+%j1$'
+SECRET_KEY = os.getenv("SECRET_KEY", 'fallback-in-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+from decouple import config
 
-ALLOWED_HOSTS = []
+DEBUG = config('DEBUG', True)
+API_KEY = config('API_KEY')
+GEMINI_API_KEY = config("GEMINI_API_KEY")
+
+ALLOWED_HOSTS = ['.onrender.com']
 
 
 # Application definition
@@ -114,11 +118,24 @@ WSGI_APPLICATION = 'realmate_challenge.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+import os
 
-DATABASES = {
+if not DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB'),
+        'USER': os.environ.get('POSTGRES_USER', ''),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_URL', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -164,16 +181,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from decouple import config
-
-API_KEY = config('API_KEY')
-
 ## sentry for monitoring
-import sentry_sdk
+# import sentry_sdk
 
-sentry_sdk.init(
-    dsn="https://2679cd8aba784ece8ee276290cdb1654@o4509192557494272.ingest.us.sentry.io/4509290219503616",
-    # Add data like request headers and IP for users,
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-)
+# sentry_sdk.init(
+#     dsn="https://2679cd8aba784ece8ee276290cdb1654@o4509192557494272.ingest.us.sentry.io/4509290219503616",
+#     # Add data like request headers and IP for users,
+#     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+#     send_default_pii=True,
+# )
