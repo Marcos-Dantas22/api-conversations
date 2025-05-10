@@ -164,7 +164,7 @@ class WebhookView(APIView):
                     infos = extrair_lead_info(data["content"])
                     if infos:
                         LeadInfos.objects.create(
-                            conversation_id=conversation,
+                            conversation=conversation,
                             type_property=infos.get("type_property"),
                             neighborhood=infos.get("neighborhood"),
                             price_track=infos.get("price_track"),
