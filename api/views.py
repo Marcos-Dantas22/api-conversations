@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404, render
-from .models import Conversation, Message, FailedWebhookEvent, LeadInformantion
+from .models import Conversation, Message, FailedWebhookEvent, LeadInfos
 from .serializers import WebhookEventSerializer, ConversationSerializer, SuccessResponseSerializer, ErrorResponseSerializer
 from .utils import StateConversationStatus
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -163,7 +163,7 @@ class WebhookView(APIView):
                 if data['direction'] == "RECEIVED" and settings.DEBUG == False:
                     infos = extrair_lead_info(data["content"])
                     if infos:
-                        LeadInformantion.objects.create(
+                        LeadInfos.objects.create(
                             conversation_id=conversation,
                             type_property=infos.get("type_property"),
                             neighborhood=infos.get("neighborhood"),
