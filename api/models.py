@@ -94,22 +94,6 @@ class FailedWebhookEvent(models.Model):
     def __str__(self):
         return f"Event {self.id}"
 
-# class LeadInformantion(models.Model):
-#     conversation = models.OneToOneField('Conversation', on_delete=models.CASCADE, related_name='lead_info')
-
-#     type_property = models.CharField(max_length=100, null=True, blank=True)
-#     neighborhood = models.CharField(max_length=100, null=True, blank=True)
-#     price_track = models.CharField(max_length=100, null=True, blank=True)
-#     rooms = models.IntegerField(null=True, blank=True)
-#     urgency = models.CharField(max_length=50, null=True, blank=True)
-
-#     class Meta:
-#         verbose_name = "Informações de imovel"
-#         verbose_name_plural = "Informações de imoveis"
-
-#     def __str__(self):
-#         return f"LeadInformation {self.id}"
-
 class LeadInfos(models.Model):
     conversation = models.ForeignKey(
         Conversation,
