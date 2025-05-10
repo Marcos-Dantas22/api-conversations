@@ -12,23 +12,23 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.CreateModel(
-        #     name='FailedWebhookEvent',
-        #     fields=[
-        #         ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-        #         ('type', models.CharField(max_length=50)),
-        #         ('data', models.JSONField()),
-        #         ('timestamp', models.DateTimeField()),
-        #         ('error_message', models.TextField()),
-        #         ('retry_count', models.IntegerField(default=0)),
-        #         ('last_retry_at', models.DateTimeField(blank=True, null=True)),
-        #         ('created_at', models.DateTimeField(auto_now_add=True)),
-        #     ],
-        #     options={
-        #         'verbose_name': 'Evento do Webhook com Falha',
-        #         'verbose_name_plural': 'Eventos do Webhook com Falha',
-        #     },
-        # ),
+        migrations.CreateModel(
+            name='FailedWebhookEvent',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('type', models.CharField(max_length=50)),
+                ('data', models.JSONField()),
+                ('timestamp', models.DateTimeField()),
+                ('error_message', models.TextField()),
+                ('retry_count', models.IntegerField(default=0)),
+                ('last_retry_at', models.DateTimeField(blank=True, null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                'verbose_name': 'Evento do Webhook com Falha',
+                'verbose_name_plural': 'Eventos do Webhook com Falha',
+            },
+        ),
         migrations.RemoveField(
             model_name='conversation',
             name='slug',
