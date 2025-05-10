@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Conversation, Message, FailedWebhookEvent, LeadInfos
+from .models import Conversation, Message, FailedWebhookEvent, LeadInfos, Property
 
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ('id', 'state', 'created_at', 'finish_at')
@@ -21,7 +21,11 @@ class LeadInfosAdmin(admin.ModelAdmin):
     list_filter = ('type_property', 'urgency', 'neighborhood')
     autocomplete_fields = ('conversation',)
 
+class PropertyAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'lead_match_count')
+
 admin.site.register(Conversation, ConversationAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(FailedWebhookEvent, FailedWebhookEventAdmin)
 admin.site.register(LeadInfos, LeadInfosAdmin)
+admin.site.register(Property, PropertyAdmin)

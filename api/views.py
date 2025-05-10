@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404, render
-from .models import Conversation, Message, FailedWebhookEvent, LeadInfos
+from .models import Conversation, Message, FailedWebhookEvent, LeadInfos, Property
 from .serializers import WebhookEventSerializer, ConversationSerializer, SuccessResponseSerializer, ErrorResponseSerializer
 from .utils import StateConversationStatus
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -13,6 +13,7 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from .geminy import extrair_lead_info
 from django.conf import settings
+from django.db.models import Q
 
 class WebhookView(APIView):
     authentication_classes = [ApiKeyAuthenticationPersonal]
@@ -299,3 +300,31 @@ def conversation_detail_view(request, id):
         'conversation': conversation,
         'messages': messages
     })
+
+def leadinfos_list(request):
+    properties = Property.objects.all().order_by('-id')
+    paginator = Paginator(properties, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'api/property_list.html', {'page_obj': page_obj})
+
+def leadinfos_detail(request, id):
+    property = get_object_or_404(Property, id=id)
+    
+    # Recuperando todas as conversas dos leads compatíveis
+    conversation_ids = LeadInfos.objects.filter(
+        Q(type_property__icontains=property.type_property) &
+        Q(neighborhood__icontains=property.neighborhood) &
+        Q(rooms=property.rooms)
+    ).values_list('conversation', flat=True)
+
+    conversations = Conversation.objects.filter(id__in=conversation_ids)
+    
+    return render(request, 'api/property_detail.html', {
+        'property': property,
+        'conversations': conversations,
+        'lead_match_count': len(conversation_ids),  # Passando o número de leads compatíveis
+    })
+
+def interface_home(request):
+    return render(request, 'api/dashboard.html')

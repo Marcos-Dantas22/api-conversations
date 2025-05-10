@@ -1,6 +1,7 @@
 from django.db import models
 from .utils import StateConversationStatus, StateMessageStatus
 import uuid
+from django.db.models import Q
 
 # Create your models here.
 class Conversation(models.Model):
@@ -107,8 +108,29 @@ class LeadInfos(models.Model):
     urgency = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
-        verbose_name = "Informações de imovel"
-        verbose_name_plural = "Informações de imoveis"
+        verbose_name = "Busca de imovel"
+        verbose_name_plural = "Buscas de imoveis"
 
     def __str__(self):
         return f"LeadInfos {self.id}"
+
+class Property(models.Model):
+    type_property = models.CharField(max_length=100)
+    neighborhood = models.CharField(max_length=100)
+    price_track = models.CharField(max_length=100)
+    rooms = models.IntegerField()
+    
+    class Meta:
+        verbose_name = "Imóvel"
+        verbose_name_plural = "Imóveis"
+
+    def __str__(self):
+        return f"{self.type_property} - {self.neighborhood}"
+
+    def lead_match_count(self):
+        return LeadInfos.objects.filter(
+            Q(type_property__icontains=self.type_property ) &
+            Q(neighborhood__icontains=self.neighborhood ) &
+            # Q(price_track__icontains=self.price_track ) &
+            Q(rooms=self.rooms)
+        ).count()
