@@ -43,7 +43,8 @@ class Message(models.Model):
     conversation = models.ForeignKey(
         Conversation,
         verbose_name="Conversa",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        default=None
     )
     content = models.CharField(
         verbose_name="Conteudo",
@@ -99,7 +100,8 @@ class LeadInformantion(models.Model):
         Conversation,
         verbose_name="Conversa",
         on_delete=models.CASCADE,
-        related_name='lead_info'
+        related_name='lead_info',
+        default=None
     )
     type_property = models.CharField(max_length=100, null=True, blank=True)
     neighborhood = models.CharField(max_length=100, null=True, blank=True)
