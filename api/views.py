@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404, render
-from .models import Conversation, Message, FailedWebhookEvent
+from .models import Conversation, Message, FailedWebhookEvent, LeadInformantion
 from .serializers import WebhookEventSerializer, ConversationSerializer, SuccessResponseSerializer, ErrorResponseSerializer
 from .utils import StateConversationStatus
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -11,6 +11,7 @@ from realmate_challenge.authentication import ApiKeyAuthenticationPersonal
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
+from .geminy import extrair_lead_info
 
 class WebhookView(APIView):
     authentication_classes = [ApiKeyAuthenticationPersonal]
@@ -155,6 +156,18 @@ class WebhookView(APIView):
                 
                 if conversation.state == StateConversationStatus.CLOSED:
                     return Response({"error": "Conversa fechada, não é possivel processar novas mensagens."}, status=status.HTTP_400_BAD_REQUEST)
+
+                if data['direction'] == "RECEIVED":
+                    infos = extrair_lead_info(data["content"])
+                    if infos:
+                        LeadInformantion.objects.create(
+                            conversation=conversation,
+                            type_property=infos.get("type_property"),
+                            neighborhood=infos.get("neighborhood"),
+                            price_track=infos.get("price_track"),
+                            rooms=infos.get("rooms"),
+                            urgency=infos.get("urgency"),
+                        )
 
                 Message.objects.create(
                     id=data["id"],

@@ -6,11 +6,12 @@ authors = ["Marcos-Dantas22 <marcosdantaslkdin@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9,<4.0"
 djangorestframework = "^3.14"
 python-decouple = "^3.8"
 sentry-sdk = {extras = ["django"], version = "^2.27.0"}
 drf-spectacular = "^0.28.0"
+google-generativeai = "^0.8.5"
 
 
 [build-system]
