@@ -25,11 +25,15 @@ SECRET_KEY = config("SECRET_KEY", 'fallback-in-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = config('DEBUG', False)
+DEBUG = False
+
+if config('DEBUG', None):
+    DEBUG = True
+
 API_KEY = config('API_KEY') 
 GEMINI_API_KEY = config("GEMINI_API_KEY")
 
-ALLOWED_HOSTS = ['.onrender.com']
+ALLOWED_HOSTS = ['.onrender.com', 'localhost']
 
 
 # Application definition
@@ -128,7 +132,7 @@ WSGI_APPLICATION = 'realmate_challenge.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 import os
 
-if not DEBUG:
+if DEBUG == True:
 
     DATABASES = {
         'default': {
