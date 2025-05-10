@@ -46,16 +46,16 @@ class Migration(migrations.Migration):
 
     operations = [
         # Adicionar slug como campo com a opção primary_key=True
-        migrations.AddField(
-            model_name='conversation',
-            name='slug',
-            field=models.SlugField(default=uuid.uuid4, max_length=150, unique=True, verbose_name='Slug'),
-        ),
-        migrations.AddField(
-            model_name='message',
-            name='slug',
-            field=models.SlugField(default=uuid.uuid4, max_length=150, unique=True, verbose_name='Slug'),
-        ),
+        # migrations.AddField(
+        #     model_name='conversation',
+        #     name='slug',
+        #     field=models.SlugField(default=uuid.uuid4, max_length=150, unique=True, verbose_name='Slug'),
+        # ),
+        # migrations.AddField(
+        #     model_name='message',
+        #     name='slug',
+        #     field=models.SlugField(default=uuid.uuid4, max_length=150, unique=True, verbose_name='Slug'),
+        # ),
         # Atualizar as ForeignKey para usar 'slug' no lugar do 'id' 
         migrations.AlterField(
             model_name='message',
@@ -63,14 +63,14 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.conversation', verbose_name='Conversa', to_field='slug'),
         ),
         # Remover o campo id somente depois de atualizar as referências
-        migrations.RemoveField(
-            model_name='conversation',
-            name='id',
-        ),
-        migrations.RemoveField(
-            model_name='message',
-            name='id',
-        ),
+        # migrations.RemoveField(
+        #     model_name='conversation',
+        #     name='id',
+        # ),
+        # migrations.RemoveField(
+        #     model_name='message',
+        #     name='id',
+        # ),
         # Definir o slug como chave primária (somente após as alterações anteriores)
         migrations.AlterField(
             model_name='conversation',
